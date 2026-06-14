@@ -1,4 +1,4 @@
-import { useRef, useState, useCallback, useEffect } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { Canvas, useThree } from "@react-three/fiber";
 import { Sky } from "@react-three/drei";
 import { EffectComposer, Bloom, Vignette } from "@react-three/postprocessing";
@@ -13,6 +13,10 @@ import { useMouseControls } from "@/hooks/useMouseControls";
 import { useGameStore } from "@/stores/gameStore";
 import { COLORS } from "@/utils/constants";
 
+interface SceneContentProps {
+  onPointerLockChange: (locked: boolean) => void;
+}
+
 function CameraSetup() {
   const { camera } = useThree();
   useEffect(() => {
@@ -24,13 +28,12 @@ function CameraSetup() {
   return null;
 }
 
-function SceneContent() {
+function SceneContent({ onPointerLockChange }: SceneContentProps) {
   const paused = useGameStore((s) => s.gameStatus === "paused");
   const gameMode = useGameStore((s) => s.gameMode);
   const updateFlight = useGameStore((s) => s.updateFlight);
 
   const { stateRef, step, reset } = useFlightPhysics();
-  const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const updraftsRef = useRef<UpdraftZone[]>([]);
   const mousePitchRef = useRef(0);
   const mouseYawRef = useRef(0);
@@ -47,12 +50,11 @@ function SceneContent() {
     [],
   );
 
-  const { gl } = useThree();
-  useEffect(() => {
-    canvasRef.current = gl.domElement;
-  }, [gl]);
-
-  useMouseControls(!paused, canvasRef, handleInputChange);
+  useMouseControls({
+    enabled: !paused,
+    onInputChange: handleInputChange,
+    onPointerLockChange,
+  });
 
   useEffect(() => {
     reset();
@@ -143,16 +145,26 @@ function SceneContent() {
   );
 }
 
-export function Scene() {
+export function Scene({
+  onPointerLockChange,
+}: {
+  onPointerLockChange: (locked: boolean) => void;
+}) {
   return (
     <Canvas
       shadows
       gl={{ antialias: true, powerPreference: "high-performance" }}
       dpr={[1, 1.5]}
       camera={{ fov: 70, near: 0.5, far: 8000, position: [0, 760, 30] }}
-      style={{ width: "100%", height: "100%", position: "absolute", inset: 0 }}
+      style={{
+        width: "100%",
+        height: "100%",
+        position: "absolute",
+        inset: 0,
+        cursor: "default",
+      }}
     >
-      <SceneContent />
+      <SceneContent onPointerLockChange={onPointerLockChange} />
     </Canvas>
   );
 }

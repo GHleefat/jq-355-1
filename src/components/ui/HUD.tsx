@@ -1,8 +1,8 @@
 import { useGameStore } from "@/stores/gameStore";
-import { Star, Cloud, Wind } from "lucide-react";
+import { Star, Cloud, Wind, MousePointer2, Lock, Unlock } from "lucide-react";
 
 export function HUD() {
-  const { flight, gameMode, starsCollected } = useGameStore();
+  const { flight, gameMode, starsCollected, pointerLocked } = useGameStore();
 
   return (
     <div className="pointer-events-none absolute inset-0 z-20 select-none">
@@ -44,16 +44,16 @@ export function HUD() {
       </div>
 
       <div className="absolute top-6 right-6 space-y-3">
-        <div className="backdrop-blur-md bg-slate-900/55 rounded-xl px-5 py-3 border border-slate-700/60 shadow-lg shadow-black/30 flex items-center gap-3">
+        <div
+          className="backdrop-blur-md bg-slate-900/55 rounded-xl px-5 py-3 border border-slate-700/60 shadow-lg shadow-black/30 flex items-center gap-3"
+          style={{ textShadow: "0 1px 3px rgba(0,0,0,0.6)" }}
+        >
           {gameMode === "relax" ? (
             <Cloud className="w-5 h-5 text-sky-300" />
           ) : (
             <Star className="w-5 h-5 text-amber-300 fill-amber-300" />
           )}
-          <span
-            className="text-sm tracking-wider text-slate-100"
-            style={{ textShadow: "0 1px 3px rgba(0,0,0,0.6)" }}
-          >
+          <span className="text-sm tracking-wider text-slate-100">
             {gameMode === "relax" ? "放松模式" : "收集模式"}
           </span>
         </div>
@@ -73,6 +73,27 @@ export function HUD() {
             </div>
           </div>
         )}
+        <div
+          className={`backdrop-blur-md rounded-xl px-4 py-2 border shadow-lg shadow-black/30 flex items-center gap-2 ${
+            pointerLocked
+              ? "bg-emerald-900/40 border-emerald-500/40"
+              : "bg-rose-900/40 border-rose-400/40"
+          }`}
+          style={{ textShadow: "0 1px 3px rgba(0,0,0,0.6)" }}
+        >
+          {pointerLocked ? (
+            <Lock className="w-4 h-4 text-emerald-300" />
+          ) : (
+            <Unlock className="w-4 h-4 text-rose-300" />
+          )}
+          <span
+            className={`text-xs tracking-wider ${
+              pointerLocked ? "text-emerald-200" : "text-rose-200"
+            }`}
+          >
+            {pointerLocked ? "已锁定 · 操控中" : "未锁定 · 点击画面"}
+          </span>
+        </div>
       </div>
 
       <div className="absolute bottom-10 left-1/2 -translate-x-1/2">
@@ -109,17 +130,18 @@ export function HUD() {
       </div>
 
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none">
-        <div className="relative w-8 h-8 opacity-70">
-          <div className="absolute left-1/2 top-0 w-px h-full bg-amber-100/80 -translate-x-1/2 shadow-[0_0_4px_rgba(0,0,0,0.8)]" />
-          <div className="absolute top-1/2 left-0 h-px w-full bg-amber-100/80 -translate-y-1/2 shadow-[0_0_4px_rgba(0,0,0,0.8)]" />
+        <div className="relative w-8 h-8 opacity-80">
+          <div className="absolute left-1/2 top-0 w-px h-full bg-amber-100/90 -translate-x-1/2 shadow-[0_0_4px_rgba(0,0,0,0.8)]" />
+          <div className="absolute top-1/2 left-0 h-px w-full bg-amber-100/90 -translate-y-1/2 shadow-[0_0_4px_rgba(0,0,0,0.8)]" />
         </div>
       </div>
 
       <div
-        className="absolute bottom-6 left-6 text-slate-300/90 text-xs tracking-wider"
+        className="absolute bottom-6 left-6 text-slate-300/90 text-xs tracking-wider flex items-center gap-2"
         style={{ textShadow: "0 1px 3px rgba(0,0,0,0.7)" }}
       >
-        点击画面锁定鼠标 · ESC 暂停
+        <MousePointer2 className="w-3.5 h-3.5" />
+        <span>上下:俯仰 &nbsp;·&nbsp; 左右:转向 &nbsp;·&nbsp; ESC:暂停</span>
       </div>
     </div>
   );

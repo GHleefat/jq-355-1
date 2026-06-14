@@ -15,6 +15,7 @@ interface GameStore {
   gameStatus: GameStatus;
   flight: FlightState;
   starsCollected: number;
+  pointerLocked: boolean;
   setMode: (mode: GameMode) => void;
   startFlight: () => void;
   pauseFlight: () => void;
@@ -23,6 +24,7 @@ interface GameStore {
   collectStar: () => void;
   updateFlight: (state: Partial<FlightState>) => void;
   resetStars: () => void;
+  setPointerLocked: (locked: boolean) => void;
 }
 
 export const useGameStore = create<GameStore>((set) => ({
@@ -35,13 +37,20 @@ export const useGameStore = create<GameStore>((set) => ({
     updraftStrength: 0,
   },
   starsCollected: 0,
+  pointerLocked: false,
   setMode: (mode) => set({ gameMode: mode }),
-  startFlight: () => set({ gameStatus: "flying", starsCollected: 0 }),
+  startFlight: () =>
+    set({ gameStatus: "flying", starsCollected: 0, pointerLocked: false }),
   pauseFlight: () =>
-    set((s) => (s.gameStatus === "flying" ? { gameStatus: "paused" } : {})),
+    set((s) =>
+      s.gameStatus === "flying"
+        ? { gameStatus: "paused", pointerLocked: false }
+        : {},
+    ),
   resumeFlight: () => set({ gameStatus: "flying" }),
-  endFlight: () => set({ gameStatus: "menu" }),
+  endFlight: () => set({ gameStatus: "menu", pointerLocked: false }),
   collectStar: () => set((s) => ({ starsCollected: s.starsCollected + 1 })),
   updateFlight: (state) => set((s) => ({ flight: { ...s.flight, ...state } })),
   resetStars: () => set({ starsCollected: 0 }),
+  setPointerLocked: (locked) => set({ pointerLocked: locked }),
 }));

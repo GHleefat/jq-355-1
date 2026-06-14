@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 
 export interface MouseInput {
   yaw: number;
@@ -6,26 +6,33 @@ export interface MouseInput {
   pointerLocked: boolean;
 }
 
-export function useMouseControls(
-  enabled: boolean,
-  canvasRef: React.RefObject<HTMLCanvasElement>,
-  onInputChange: (input: MouseInput) => void,
-) {
+interface Props {
+  enabled: boolean;
+  onInputChange: (input: MouseInput) => void;
+  onPointerLockChange?: (locked: boolean) => void;
+}
+
+export function useMouseControls({
+  enabled,
+  onInputChange,
+  onPointerLockChange,
+}: Props) {
   const yawRef = useRef(0);
   const pitchRef = useRef(0);
-  const lockedRef = useRef(false);
+  const [pointerLocked, setPointerLocked] = useState(false);
+  const pointerLockedRef = useRef(false);
 
   useEffect(() => {
     if (!enabled) return;
-    const canvas = canvasRef.current;
-    if (!canvas) return;
+
+    const sensitivity = 0.004;
 
     const onMove = (e: MouseEvent) => {
-      if (!lockedRef.current) return;
-      yawRef.current += e.movementX * 0.002;
+      if (!pointerLockedRef.current) return;
+      yawRef.current += e.movementX * sensitivity;
       pitchRef.current = Math.max(
         -0.6,
-        Math.min(0.8, pitchRef.current + e.movementY * 0.002),
+        Math.min(0.8, pitchRef.current + e.movementY * sensitivity),
       );
       onInputChange({
         yaw: yawRef.current,
@@ -35,8 +42,12 @@ export function useMouseControls(
     };
 
     const onLockChange = () => {
-      lockedRef.current = document.pointerLockElement === canvas;
-      if (!lockedRef.current) {
+      const canvas = document.querySelector("canvas");
+      const locked = document.pointerLockElement === canvas;
+      pointerLockedRef.current = locked;
+      setPointerLocked(locked);
+      onPointerLockChange?.(locked);
+      if (!locked) {
         onInputChange({
           yaw: yawRef.current,
           pitch: pitchRef.current,
@@ -46,21 +57,22 @@ export function useMouseControls(
     };
 
     const onClick = () => {
-      if (!lockedRef.current) {
+      const canvas = document.querySelector("canvas");
+      if (canvas && !pointerLockedRef.current && enabled) {
         canvas.requestPointerLock();
       }
     };
 
     document.addEventListener("mousemove", onMove);
     document.addEventListener("pointerlockchange", onLockChange);
-    canvas.addEventListener("click", onClick);
+    document.addEventListener("click", onClick);
 
     return () => {
       document.removeEventListener("mousemove", onMove);
       document.removeEventListener("pointerlockchange", onLockChange);
-      canvas.removeEventListener("click", onClick);
+      document.removeEventListener("click", onClick);
     };
-  }, [enabled, canvasRef, onInputChange]);
+  }, [enabled, onInputChange, onPointerLockChange]);
 
-  return { yawRef, pitchRef };
+  return { yawRef, pitchRef, pointerLocked };
 }
