@@ -1,8 +1,8 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 
 export interface MouseInput {
-  yaw: number;
-  pitch: number;
+  offsetX: number;
+  offsetY: number;
   pointerLocked: boolean;
 }
 
@@ -17,28 +17,39 @@ export function useMouseControls({
   onInputChange,
   onPointerLockChange,
 }: Props) {
-  const yawRef = useRef(0);
-  const pitchRef = useRef(0);
+  const offsetXRef = useRef(0);
+  const offsetYRef = useRef(0);
   const [pointerLocked, setPointerLocked] = useState(false);
   const pointerLockedRef = useRef(false);
+  const lastMoveTime = useRef(0);
+
+  const emit = useCallback(() => {
+    onInputChange({
+      offsetX: offsetXRef.current,
+      offsetY: offsetYRef.current,
+      pointerLocked: pointerLockedRef.current,
+    });
+  }, [onInputChange]);
 
   useEffect(() => {
     if (!enabled) return;
 
-    const sensitivity = 0.004;
+    const sensitivity = 0.0028;
+    const maxOffset = 1.0;
+    const springBack = 2.2;
 
     const onMove = (e: MouseEvent) => {
       if (!pointerLockedRef.current) return;
-      yawRef.current += e.movementX * sensitivity;
-      pitchRef.current = Math.max(
-        -0.6,
-        Math.min(0.8, pitchRef.current + e.movementY * sensitivity),
+      lastMoveTime.current = performance.now();
+      offsetXRef.current = Math.max(
+        -maxOffset,
+        Math.min(maxOffset, offsetXRef.current + e.movementX * sensitivity),
       );
-      onInputChange({
-        yaw: yawRef.current,
-        pitch: pitchRef.current,
-        pointerLocked: true,
-      });
+      offsetYRef.current = Math.max(
+        -maxOffset,
+        Math.min(maxOffset, offsetYRef.current + e.movementY * sensitivity),
+      );
+      emit();
     };
 
     const onLockChange = () => {
@@ -48,31 +59,54 @@ export function useMouseControls({
       setPointerLocked(locked);
       onPointerLockChange?.(locked);
       if (!locked) {
-        onInputChange({
-          yaw: yawRef.current,
-          pitch: pitchRef.current,
-          pointerLocked: false,
-        });
+        offsetXRef.current = 0;
+        offsetYRef.current = 0;
+        emit();
       }
     };
 
-    const onClick = () => {
-      const canvas = document.querySelector("canvas");
-      if (canvas && !pointerLockedRef.current && enabled) {
-        canvas.requestPointerLock();
+    let raf = 0;
+    const loop = () => {
+      const now = performance.now();
+      const idle = now - lastMoveTime.current > 50;
+      if (pointerLockedRef.current && idle) {
+        let changed = false;
+        if (Math.abs(offsetXRef.current) > 0.001) {
+          const step =
+            Math.sign(offsetXRef.current) *
+            Math.min(Math.abs(offsetXRef.current), springBack * 0.016);
+          offsetXRef.current -= step;
+          changed = true;
+        }
+        if (Math.abs(offsetYRef.current) > 0.001) {
+          const step =
+            Math.sign(offsetYRef.current) *
+            Math.min(Math.abs(offsetYRef.current), springBack * 0.016);
+          offsetYRef.current -= step;
+          changed = true;
+        }
+        if (changed) emit();
       }
+      raf = requestAnimationFrame(loop);
     };
+    raf = requestAnimationFrame(loop);
 
     document.addEventListener("mousemove", onMove);
     document.addEventListener("pointerlockchange", onLockChange);
-    document.addEventListener("click", onClick);
 
     return () => {
+      cancelAnimationFrame(raf);
       document.removeEventListener("mousemove", onMove);
       document.removeEventListener("pointerlockchange", onLockChange);
-      document.removeEventListener("click", onClick);
     };
-  }, [enabled, onInputChange, onPointerLockChange]);
+  }, [enabled, onInputChange, onPointerLockChange, emit]);
 
-  return { yawRef, pitchRef, pointerLocked };
+  const requestLock = useCallback(() => {
+    const canvas = document.querySelector("canvas");
+    if (canvas && !pointerLockedRef.current && enabled) {
+      canvas.requestPointerLock();
+    }
+  }, [enabled]);
+
+  return { offsetXRef, offsetYRef, pointerLocked, requestLock };
 }

@@ -8,6 +8,10 @@ export interface FlightState {
   speed: number;
   inUpdraft: boolean;
   updraftStrength: number;
+  pitch: number;
+  yaw: number;
+  inputOffsetX: number;
+  inputOffsetY: number;
 }
 
 interface GameStore {
@@ -35,6 +39,10 @@ export const useGameStore = create<GameStore>((set) => ({
     speed: 45,
     inUpdraft: false,
     updraftStrength: 0,
+    pitch: 0,
+    yaw: 0,
+    inputOffsetX: 0,
+    inputOffsetY: 0,
   },
   starsCollected: 0,
   pointerLocked: false,

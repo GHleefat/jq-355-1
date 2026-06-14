@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback, useRef } from "react";
+import { useEffect, useCallback, useRef } from "react";
 import { Canvas, useThree } from "@react-three/fiber";
 import { Sky } from "@react-three/drei";
 import { EffectComposer, Bloom, Vignette } from "@react-three/postprocessing";
@@ -35,19 +35,23 @@ function SceneContent({ onPointerLockChange }: SceneContentProps) {
 
   const { stateRef, step, reset } = useFlightPhysics();
   const updraftsRef = useRef<UpdraftZone[]>([]);
-  const mousePitchRef = useRef(0);
-  const mouseYawRef = useRef(0);
+  const inputOffsetXRef = useRef(0);
+  const inputOffsetYRef = useRef(0);
 
   const handleZonesReady = useCallback((zones: UpdraftZone[]) => {
     updraftsRef.current = zones;
   }, []);
 
   const handleInputChange = useCallback(
-    (input: { yaw: number; pitch: number }) => {
-      mousePitchRef.current = input.pitch;
-      mouseYawRef.current = input.yaw;
+    (input: { offsetX: number; offsetY: number; pointerLocked: boolean }) => {
+      inputOffsetXRef.current = input.offsetX;
+      inputOffsetYRef.current = input.offsetY;
+      updateFlight({
+        inputOffsetX: input.offsetX,
+        inputOffsetY: input.offsetY,
+      });
     },
-    [],
+    [updateFlight],
   );
 
   useMouseControls({
@@ -58,8 +62,8 @@ function SceneContent({ onPointerLockChange }: SceneContentProps) {
 
   useEffect(() => {
     reset();
-    mousePitchRef.current = 0;
-    mouseYawRef.current = 0;
+    inputOffsetXRef.current = 0;
+    inputOffsetYRef.current = 0;
   }, [reset]);
 
   let rafLast = performance.now();
@@ -73,8 +77,8 @@ function SceneContent({ onPointerLockChange }: SceneContentProps) {
       if (!paused) {
         const result = step(
           dt,
-          mousePitchRef.current,
-          mouseYawRef.current,
+          inputOffsetXRef.current,
+          inputOffsetYRef.current,
           updraftsRef.current,
         );
         stateRef.current.position.copy(result.position);
@@ -86,6 +90,8 @@ function SceneContent({ onPointerLockChange }: SceneContentProps) {
         updateFlight({
           inUpdraft: result.updraftStrength > 0.05,
           updraftStrength: result.updraftStrength,
+          pitch: result.pitch,
+          yaw: result.yaw,
         });
       }
       requestAnimationFrame(loop);

@@ -33,16 +33,19 @@ export function useFlightPhysics() {
 
   const step = (
     dt: number,
-    mousePitch: number,
-    mouseYaw: number,
+    inputOffsetX: number,
+    inputOffsetY: number,
     updrafts: UpdraftZone[],
   ) => {
     const s = stateRef.current;
 
-    s.pitch += (mousePitch - s.pitch) * PHYSICS.PITCH_SPEED * dt;
-    s.yaw += (mouseYaw - s.yaw) * PHYSICS.YAW_SPEED * dt;
+    const targetPitch = -inputOffsetY * 0.7;
+    const yawRate = inputOffsetX * 1.6;
 
-    const targetBank = -(mouseYaw - s.yaw) * 2;
+    s.pitch += (targetPitch - s.pitch) * PHYSICS.PITCH_SPEED * dt;
+    s.yaw += yawRate * dt;
+
+    const targetBank = -inputOffsetX * 0.7;
     s.bank += (targetBank - s.bank) * PHYSICS.BANK_SPEED * dt;
     s.bank = Math.max(-0.8, Math.min(0.8, s.bank));
 

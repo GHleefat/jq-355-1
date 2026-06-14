@@ -1,14 +1,26 @@
 import { useGameStore } from "@/stores/gameStore";
 import { Star, Cloud, Wind, MousePointer2, Lock, Unlock } from "lucide-react";
+import { PHYSICS } from "@/utils/constants";
 
 export function HUD() {
   const { flight, gameMode, starsCollected, pointerLocked } = useGameStore();
+
+  const pitchDeg = (flight.pitch * 180) / Math.PI;
+  const yawDeg = ((flight.yaw * 180) / Math.PI) % 360;
+
+  const indicatorRange = 40;
+  const dotX = flight.inputOffsetX * indicatorRange;
+  const dotY = flight.inputOffsetY * indicatorRange;
+  const inputMagnitude = Math.min(
+    1,
+    Math.sqrt(flight.inputOffsetX ** 2 + flight.inputOffsetY ** 2),
+  );
 
   return (
     <div className="pointer-events-none absolute inset-0 z-20 select-none">
       <div className="absolute top-6 left-6 space-y-3">
         <div
-          className="backdrop-blur-md bg-slate-900/55 rounded-xl px-5 py-3 border border-slate-700/60 shadow-lg shadow-black/30"
+          className="backdrop-blur-md bg-slate-900/60 rounded-xl px-5 py-3 border border-slate-700/60 shadow-lg shadow-black/30"
           style={{ textShadow: "0 1px 3px rgba(0,0,0,0.6)" }}
         >
           <div className="text-xs text-slate-300 tracking-widest uppercase mb-1">
@@ -25,7 +37,7 @@ export function HUD() {
           </div>
         </div>
         <div
-          className="backdrop-blur-md bg-slate-900/55 rounded-xl px-5 py-3 border border-slate-700/60 shadow-lg shadow-black/30"
+          className="backdrop-blur-md bg-slate-900/60 rounded-xl px-5 py-3 border border-slate-700/60 shadow-lg shadow-black/30"
           style={{ textShadow: "0 1px 3px rgba(0,0,0,0.6)" }}
         >
           <div className="text-xs text-slate-300 tracking-widest uppercase mb-1">
@@ -41,11 +53,34 @@ export function HUD() {
             </span>
           </div>
         </div>
+        <div
+          className="backdrop-blur-md bg-slate-900/60 rounded-xl px-5 py-3 border border-slate-700/60 shadow-lg shadow-black/30"
+          style={{ textShadow: "0 1px 3px rgba(0,0,0,0.6)" }}
+        >
+          <div className="flex gap-6 text-sm">
+            <div>
+              <div className="text-xs text-slate-400 tracking-wider mb-0.5">
+                PITCH
+              </div>
+              <div className="text-amber-100 font-mono">
+                {pitchDeg.toFixed(1)}°
+              </div>
+            </div>
+            <div>
+              <div className="text-xs text-slate-400 tracking-wider mb-0.5">
+                YAW
+              </div>
+              <div className="text-amber-100 font-mono">
+                {yawDeg >= 0 ? yawDeg.toFixed(0) : (yawDeg + 360).toFixed(0)}°
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
       <div className="absolute top-6 right-6 space-y-3">
         <div
-          className="backdrop-blur-md bg-slate-900/55 rounded-xl px-5 py-3 border border-slate-700/60 shadow-lg shadow-black/30 flex items-center gap-3"
+          className="backdrop-blur-md bg-slate-900/60 rounded-xl px-5 py-3 border border-slate-700/60 shadow-lg shadow-black/30 flex items-center gap-3"
           style={{ textShadow: "0 1px 3px rgba(0,0,0,0.6)" }}
         >
           {gameMode === "relax" ? (
@@ -58,7 +93,7 @@ export function HUD() {
           </span>
         </div>
         {gameMode === "collect" && (
-          <div className="backdrop-blur-md bg-slate-900/55 rounded-xl px-5 py-3 border border-slate-700/60 shadow-lg shadow-black/30">
+          <div className="backdrop-blur-md bg-slate-900/60 rounded-xl px-5 py-3 border border-slate-700/60 shadow-lg shadow-black/30">
             <div className="flex items-center gap-3">
               <Star className="w-5 h-5 text-amber-300 fill-amber-300" />
               <span
@@ -76,8 +111,8 @@ export function HUD() {
         <div
           className={`backdrop-blur-md rounded-xl px-4 py-2 border shadow-lg shadow-black/30 flex items-center gap-2 ${
             pointerLocked
-              ? "bg-emerald-900/40 border-emerald-500/40"
-              : "bg-rose-900/40 border-rose-400/40"
+              ? "bg-emerald-900/50 border-emerald-500/50"
+              : "bg-rose-900/50 border-rose-400/50"
           }`}
           style={{ textShadow: "0 1px 3px rgba(0,0,0,0.6)" }}
         >
@@ -97,7 +132,7 @@ export function HUD() {
       </div>
 
       <div className="absolute bottom-10 left-1/2 -translate-x-1/2">
-        <div className="backdrop-blur-md bg-slate-900/55 rounded-full px-6 py-2 border border-slate-700/60 shadow-lg shadow-black/30 flex items-center gap-3">
+        <div className="backdrop-blur-md bg-slate-900/60 rounded-full px-6 py-2 border border-slate-700/60 shadow-lg shadow-black/30 flex items-center gap-3">
           <Wind
             className={`w-4 h-4 transition-all ${
               flight.inUpdraft ? "text-amber-300" : "text-slate-400"
@@ -130,9 +165,49 @@ export function HUD() {
       </div>
 
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none">
-        <div className="relative w-8 h-8 opacity-80">
-          <div className="absolute left-1/2 top-0 w-px h-full bg-amber-100/90 -translate-x-1/2 shadow-[0_0_4px_rgba(0,0,0,0.8)]" />
-          <div className="absolute top-1/2 left-0 h-px w-full bg-amber-100/90 -translate-y-1/2 shadow-[0_0_4px_rgba(0,0,0,0.8)]" />
+        <div className="relative" style={{ width: 110, height: 110 }}>
+          <div
+            className="absolute left-1/2 top-0 w-px h-full -translate-x-1/2 bg-amber-100/70"
+            style={{ boxShadow: "0 0 6px rgba(0,0,0,0.85)" }}
+          />
+          <div
+            className="absolute top-1/2 left-0 h-px w-full -translate-y-1/2 bg-amber-100/70"
+            style={{ boxShadow: "0 0 6px rgba(0,0,0,0.85)" }}
+          />
+          <div
+            className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-amber-100/40"
+            style={{ width: 88, height: 88 }}
+          />
+          <div
+            className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full border border-amber-100/25"
+            style={{ width: 52, height: 52 }}
+          />
+          <div
+            className="absolute rounded-full"
+            style={{
+              width: 14,
+              height: 14,
+              left: `calc(50% + ${dotX}px - 7px)`,
+              top: `calc(50% + ${dotY}px - 7px)`,
+              background:
+                inputMagnitude > 0.08
+                  ? "rgba(251, 191, 36, 0.95)"
+                  : "rgba(255, 241, 168, 0.4)",
+              boxShadow:
+                inputMagnitude > 0.08
+                  ? "0 0 14px rgba(251,191,36,0.9), 0 0 4px rgba(255,255,255,0.8)"
+                  : "0 0 4px rgba(0,0,0,0.6)",
+              transition: "background 120ms, box-shadow 120ms",
+            }}
+          />
+          <div
+            className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-amber-50"
+            style={{
+              width: 4,
+              height: 4,
+              boxShadow: "0 0 4px rgba(0,0,0,0.8)",
+            }}
+          />
         </div>
       </div>
 
