@@ -10,7 +10,7 @@ interface CloudLayerData {
   scales: Float32Array;
 }
 
-const CLOUDS_PER_LAYER = 50;
+const CLOUDS_PER_LAYER = 28;
 
 function makeCloudTexture() {
   const size = 256;
@@ -124,7 +124,7 @@ export function Clouds() {
           <meshBasicMaterial
             map={cloudTex}
             transparent
-            opacity={0.55}
+            opacity={0.32}
             depthWrite={false}
             color={COLORS.CLOUD}
           />

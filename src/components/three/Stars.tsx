@@ -22,7 +22,7 @@ export function Stars({ enabled, gliderPosition }: Props) {
       positions.push(
         new THREE.Vector3(
           Math.cos(angle) * r,
-          300 + Math.random() * 700,
+          450 + Math.random() * 900,
           Math.sin(angle) * r,
         ),
       );
@@ -81,13 +81,13 @@ export function Stars({ enabled, gliderPosition }: Props) {
           }}
           position={pos}
         >
-          <octahedronGeometry args={[5, 0]} />
+          <octahedronGeometry args={[8, 0]} />
           <meshStandardMaterial
-            color={0xffd700}
-            emissive={0xffaa00}
-            emissiveIntensity={1.2}
-            metalness={0.3}
-            roughness={0.2}
+            color={0xfff1a8}
+            emissive={0xffcc33}
+            emissiveIntensity={2.5}
+            metalness={0.5}
+            roughness={0.15}
           />
         </mesh>
       ))}

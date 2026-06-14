@@ -16,7 +16,7 @@ import { COLORS } from "@/utils/constants";
 function CameraSetup() {
   const { camera } = useThree();
   useEffect(() => {
-    camera.position.set(0, 710, 30);
+    camera.position.set(0, 760, 30);
     camera.far = 8000;
     camera.near = 0.5;
     camera.updateProjectionMatrix();
@@ -116,12 +116,12 @@ function SceneContent() {
         sunPosition={[300, 350, -200]}
         inclination={0.52}
         azimuth={0.25}
-        turbidity={6}
-        rayleigh={1.5}
-        mieCoefficient={0.005}
+        turbidity={2}
+        rayleigh={0.8}
+        mieCoefficient={0.003}
         mieDirectionalG={0.8}
       />
-      <fog attach="fog" args={[COLORS.SKY_BOTTOM, 600, 3500]} />
+      <fog attach="fog" args={[COLORS.SKY_BOTTOM, 1200, 5500]} />
       <Terrain />
       <Clouds />
       <Updrafts onZonesReady={handleZonesReady} />
@@ -132,12 +132,12 @@ function SceneContent() {
       <Glider physicsState={stateRef} paused={paused} />
       <EffectComposer multisampling={0} enableNormalPass={false}>
         <Bloom
-          intensity={0.6}
-          luminanceThreshold={0.4}
+          intensity={0.25}
+          luminanceThreshold={0.55}
           luminanceSmoothing={0.9}
           mipmapBlur
         />
-        <Vignette eskil={false} offset={0.2} darkness={0.55} />
+        <Vignette eskil={false} offset={0.25} darkness={0.35} />
       </EffectComposer>
     </>
   );
@@ -149,7 +149,7 @@ export function Scene() {
       shadows
       gl={{ antialias: true, powerPreference: "high-performance" }}
       dpr={[1, 1.5]}
-      camera={{ fov: 70, near: 0.5, far: 8000, position: [0, 710, 30] }}
+      camera={{ fov: 70, near: 0.5, far: 8000, position: [0, 760, 30] }}
       style={{ width: "100%", height: "100%", position: "absolute", inset: 0 }}
     >
       <SceneContent />
